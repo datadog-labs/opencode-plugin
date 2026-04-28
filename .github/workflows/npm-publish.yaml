@@ -1,0 +1,56 @@
+name: Publish to npm
+
+# Manual-only — never fires on push or release. Trigger from the Actions tab
+# once the trusted publisher is configured on npmjs.com (see release docs).
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'npm dist-tag to publish under'
+        required: false
+        default: 'latest'
+        type: string
+      dry_run:
+        description: 'Run npm publish --dry-run (no upload). Defaults to true so a casual trigger does not publish.'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  NODE_VERSION: '22.19.0'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # protected-main-env restricts secrets/OIDC to the default branch and tags.
+    # Must exist on the public repo before the first run; see release docs.
+    environment: protected-main-env
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Verify package is in the @datadog scope
+        run: |
+          NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
+          case "$NAME" in
+            @datadog/*) echo "Publishing $NAME";;
+            *) echo "Refusing to publish: package name '$NAME' is not in the @datadog scope"; exit 1;;
+          esac
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish
+        run: |
+          ARGS="--provenance --access public --tag ${{ inputs.tag }}"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          npm publish $ARGS
