@@ -1,3 +1,6 @@
+// Unless explicitly stated otherwise all files in this repository are licensed under the Apache-2.0 License.
+// This product includes software developed at Datadog (https://www.datadoghq.com/) Copyright 2026 Datadog, Inc.
+
 // opencode.json / opencode.jsonc I/O, server-state reads, and the live SDK
 // counterparts (`addMcpServer`, `reconnectMcpServer`). Grouped into one module
 // because they share the `McpEntry` shape and the `oauth: false` preservation
