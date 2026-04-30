@@ -1,6 +1,6 @@
 {
   "name": "@datadog/opencode-plugin",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Use Datadog directly in OpenCode through a preconfigured Datadog MCP server. Query logs, metrics, traces, dashboards, and more through natural conversation. This plugin is in preview.",
   "main": "datadog.ts",
   "author": "Datadog",
