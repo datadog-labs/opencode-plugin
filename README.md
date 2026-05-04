@@ -13,21 +13,17 @@ Query your Datadog data directly from OpenCode using natural language. Ask about
 
 > If you already have the Datadog MCP server registered separately in your `opencode.json`, disable or remove it first to avoid conflicts.
 
-**1. Copy the plugin into your project:**
-
-```bash
-cp -r <path-to-this-repo> .opencode/plugins/datadog
-```
-
-**2. Register the plugin in your `opencode.json`** (create the file if it doesn't exist):
+**1. Add the plugin to your `opencode.json`** (create the file if it doesn't exist):
 
 ```json
-{ "plugin": [".opencode/plugins/datadog"] }
+{ "plugin": ["@datadog/opencode-plugin"] }
 ```
 
-If you already have a `plugin` array, add `".opencode/plugins/datadog"` to the existing list.
+If you already have a `plugin` array, add `"@datadog/opencode-plugin"` to the existing list.
 
-**3. Restart OpenCode.**
+**2. Restart OpenCode.**
+
+OpenCode runs `bun install` at startup, so the package is fetched from npm automatically — no separate install command needed.
 
 The plugin provides three custom tools (`ddsetup`, `ddconfig`, `ddtoolsets`) that the agent can use to manage the Datadog MCP server.
 

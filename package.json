@@ -1,6 +1,6 @@
 {
   "name": "@datadog/opencode-plugin",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "description": "Use Datadog directly in OpenCode through a preconfigured Datadog MCP server. Query logs, metrics, traces, dashboards, and more through natural conversation. This plugin is in preview.",
   "main": "datadog.ts",
   "author": "Datadog",
@@ -12,7 +12,10 @@
     "observability",
     "productivity"
   ],
-  "repository": "https://github.com/datadog-labs/opencode-plugin.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datadog-labs/opencode-plugin.git"
+  },
   "publishConfig": {
     "access": "public"
   },

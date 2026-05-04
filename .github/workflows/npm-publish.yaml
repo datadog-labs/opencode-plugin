@@ -1,9 +1,13 @@
 name: Publish to npm
 
-# Manual-only — never fires on push or release. Trigger from the Actions tab
-# once the trusted publisher is configured on npmjs.com (see release docs).
+# Fires automatically when a GitHub Release is published (the public repo's
+# release.yaml creates one when a release PR merges to main). Also exposes a
+# manual workflow_dispatch for bootstrap, dry-runs, and dist-tag overrides.
 
 on:
+  release:
+    types:
+      - 'published'
   workflow_dispatch:
     inputs:
       tag:
@@ -12,7 +16,7 @@ on:
         default: 'latest'
         type: string
       dry_run:
-        description: 'Run npm publish --dry-run (no upload). Defaults to true so a casual trigger does not publish.'
+        description: 'Run npm publish --dry-run (no upload). Defaults to true so a casual manual trigger does not publish.'
         required: false
         default: true
         type: boolean
@@ -48,9 +52,15 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish
+        env:
+          # On release events these inputs are absent; fall back to safe defaults
+          # (publish under `latest`, no dry-run). On workflow_dispatch the user's
+          # choices flow through unchanged.
+          NPM_TAG: ${{ inputs.tag || 'latest' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: |
-          ARGS="--provenance --access public --tag ${{ inputs.tag }}"
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
+          ARGS="--provenance --access public --tag ${NPM_TAG}"
+          if [ "${DRY_RUN}" = "true" ]; then
             ARGS="$ARGS --dry-run"
           fi
           npm publish $ARGS
