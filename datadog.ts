@@ -9,7 +9,7 @@ import { createDdtoolsets } from './tools/ddtoolsets.js';
 import { makeUrlBuilder } from './url.js';
 
 // Build-time constants (replaced by bundle.ts — keep inside string literals)
-const PLUGIN_VERSION = '0.7.7';
+const PLUGIN_VERSION = '0.7.8';
 const PLUGIN_ID = 'opencode-plugin';
 const MCP_NAME = 'datadog';
 

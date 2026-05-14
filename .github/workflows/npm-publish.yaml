@@ -1,8 +1,13 @@
 name: Publish to npm
 
 # Fires automatically when a GitHub Release is published (the public repo's
-# release.yaml creates one when a release PR merges to main). Also exposes a
-# manual workflow_dispatch for bootstrap, dry-runs, and dist-tag overrides.
+# release.yaml creates one when a release PR merges to main or to a
+# preview-<slug> branch). Also exposes a manual workflow_dispatch for
+# bootstrap, dry-runs, and dist-tag overrides.
+#
+# On release events the dist-tag is derived from package.json's version:
+# X.Y.Z-preview.<slug> publishes under dist-tag preview-<slug>; any other
+# version publishes under dist-tag latest.
 
 on:
   release:
@@ -11,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'npm dist-tag to publish under'
+        description: 'npm dist-tag to publish under. Overrides the derived dist-tag.'
         required: false
         default: 'latest'
         type: string
@@ -51,12 +56,26 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Derive dist-tag from version
+        id: derive
+        run: |
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+          # Preview versions look like X.Y.Z-preview.<slug>; they publish
+          # under dist-tag preview-<slug>. Anything else is stable.
+          if [[ "${VERSION}" =~ -preview\.([a-z0-9-]+)$ ]]; then
+            DERIVED_TAG="preview-${BASH_REMATCH[1]}"
+          else
+            DERIVED_TAG="latest"
+          fi
+          echo "tag=${DERIVED_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Derived dist-tag '${DERIVED_TAG}' from version '${VERSION}'"
+
       - name: Publish
         env:
-          # On release events these inputs are absent; fall back to safe defaults
-          # (publish under `latest`, no dry-run). On workflow_dispatch the user's
-          # choices flow through unchanged.
-          NPM_TAG: ${{ inputs.tag || 'latest' }}
+          # On release events `inputs.tag` is empty and we fall back to the
+          # version-derived tag. On workflow_dispatch the user's input wins
+          # (default 'latest', overridable to anything they choose).
+          NPM_TAG: ${{ inputs.tag || steps.derive.outputs.tag }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
         run: |
           ARGS="--provenance --access public --tag ${NPM_TAG}"
