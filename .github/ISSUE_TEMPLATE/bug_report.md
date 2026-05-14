@@ -21,5 +21,5 @@ Steps to reproduce the behavior:
 ## Environment
 
 - OS:
-- Client + version (e.g. OpenCode 0.x.y):
+- Client version (e.g. 0.x.y):
 - Plugin version:
