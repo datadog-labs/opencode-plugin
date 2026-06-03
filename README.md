@@ -55,13 +55,13 @@ List my dashboards
 
 **Never connected before?** Tell the agent to run `ddsetup`. It will configure the Datadog MCP server in your `opencode.json`.
 
-**Was working before but stopped?** Tell the agent to run `ddconfig` with the troubleshoot action. It will check your domain, authentication status, and help diagnose the issue.
+**Was working before but stopped?** Tell the agent to run `ddconfig`. It will check your domain, authentication status, and help diagnose the issue.
 
 ## Changing settings
 
 The plugin provides tools the agent can use to manage configuration:
 
-- `ddconfig` — change your Datadog site or view connection details
+- `ddconfig` — change your Datadog site, or troubleshoot a broken connection
 - `ddtoolsets` — enable or disable groups of tools
 
 ## Advanced usage
