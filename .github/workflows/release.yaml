@@ -10,6 +10,7 @@ on:
       - 'preview-*'
     paths:
       - '*-plugin/plugin.json'
+      - 'plugin.json'
       - 'package.json'
 
 permissions:
@@ -20,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Extract version
         id: version
@@ -28,6 +29,8 @@ jobs:
           MANIFEST=$(find . -maxdepth 2 -name plugin.json -path '*/.*-plugin/*' | head -1)
           if [ -n "$MANIFEST" ]; then
             VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('${MANIFEST}','utf8')).version)")
+          elif [ -f plugin.json ]; then
+            VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('plugin.json','utf8')).version)")
           elif [ -f package.json ]; then
             VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
           else
@@ -49,29 +52,41 @@ jobs:
       - name: Check if release already exists
         id: check
         run: |
-          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+          # The default shell is `bash -e` without pipefail; without this, a
+          # failed lookup would be masked by wc/tr and read as "no release".
+          set -o pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          # Match on tag_name explicitly (not `gh release view`) so this also
+          # catches draft releases, which have a tag_name but no git tag ref
+          # yet — otherwise every push before the draft is published would
+          # create a duplicate draft for the same version.
+          # With --paginate, --jq runs once per page, so emit one line per
+          # matching release and count lines across all pages (gh rejects
+          # --slurp together with --jq).
+          MATCH=$(gh api "repos/${{ github.repository }}/releases?per_page=100" --paginate \
+            --jq '.[] | select(.tag_name == env.TAG) | .tag_name' | wc -l | tr -d ' ')
+          if [ "$MATCH" -gt 0 ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Release ${{ steps.version.outputs.tag }} already exists, skipping"
+            echo "Release ${TAG} already exists (or is already drafted), skipping"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
 
-      - name: Create release
+      - name: Create draft release
         if: steps.check.outputs.exists == 'false'
         run: |
-          # --target pins the new tag to the commit that triggered this
-          # workflow. Without it, `gh release create` would create the
-          # missing tag on the repo's default branch (main), which would
-          # make a preview-branch release point at main instead of the
-          # preview commit — and break the downstream npm-publish step
-          # for OpenCode previews, since it derives the dist-tag from the
-          # tagged commit's package.json.
-          ARGS="--title ${{ steps.version.outputs.tag }} --generate-notes --target ${{ github.sha }}"
+          # Org policy blocks Actions from creating/pushing tags directly, so
+          # we create a draft release instead. GitHub doesn't create the git
+          # tag ref until a human publishes the draft, which is done under
+          # their own (bypass-exempt) identity rather than github-actions[bot].
+          TAG="${{ steps.version.outputs.tag }}"
+          ARGS="--title ${TAG} --generate-notes --draft --target ${{ github.sha }}"
           if [ "${{ steps.version.outputs.is_prerelease }}" = "true" ]; then
             ARGS="$ARGS --prerelease"
           fi
-          gh release create "${{ steps.version.outputs.tag }}" $ARGS
+          gh release create "${TAG}" $ARGS
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
