@@ -4,7 +4,7 @@ Thanks for taking the time to contribute. This document covers basic guidelines 
 
 ## Submitting issues
 
-- For feature requests, open a [GitHub issue](../../issues/new) describing the use case and proposed behavior.
+- For feature requests, open a [GitHub issue](https://github.com/datadog-labs/opencode-plugin/issues/new) describing the use case and proposed behavior.
 - For bug reports, include reproduction steps, expected vs. actual behavior, and your environment (OS, client version, plugin version).
 
 ## Pull requests
@@ -15,10 +15,6 @@ Thanks for taking the time to contribute. This document covers basic guidelines 
 4. Open a pull request describing what changed and why.
 
 Note that this repository is a downstream artifact — it is regenerated from an internal source repository on each release. External contributions are reviewed here, then ported back to the internal source as part of the normal release flow. We will let you know in the PR if changes need to flow through that path.
-
-## Code of conduct
-
-This project follows the [Datadog Code of Conduct](https://github.com/DataDog/.github/blob/master/CODE_OF_CONDUCT.md).
 
 ## License
 
